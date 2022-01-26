@@ -1,5 +1,6 @@
 import React, {Component} from "react";
 import AddBook from "./AddBook/AddBook";
+import ModifyBook from "./ModifyBook/ModifyBook";
 
 class Books extends Component {
     state = {
@@ -45,7 +46,7 @@ class Books extends Component {
                 country : "UK"
             },
             {
-                id : 6,
+                id : 14,
                 name : "Nought and Crosses",
                 author : "Mallory Blackman",
                 year : 2001,
@@ -84,7 +85,8 @@ class Books extends Component {
                 price : 15.70,
                 country : "US"
             }
-        ]
+        ],
+        bookToModify: 0
     }
 
     deleteBookHandler = (id) => {
@@ -97,17 +99,26 @@ class Books extends Component {
         this.setState({books});
     }
 
-    addBookHandler = (name, author, year, price, country) => {
-        console.log("Nom du livre à créer " + name);
+    addBookHandler = (book) => {
+        console.log("Nom du livre à créer " + book.name);
         const books = [...this.state.books];
-        let id = 0;
-        this.state.books.map((book)=>{
-            if(book.id>=id){
-                id = book.id+1
-            }
-        })
-        books.push({id: id, name: name, author: author, year: year, price: price, country: country});
+        const id = Math.max(...books.map(b => b.id)) + 1;
+        book.id = id;
+        books.push(book);
         this.setState({books});
+    }
+
+    editBookHandler = (id) => {
+        this.setState({bookToModify: id});
+    }
+
+    modifyBookHandler = (book) => {
+        const index = this.state.books.findIndex(b => {
+            return b.id === book.id
+        })
+        const books = [...this.state.books];
+        books[index] = book;
+        this.setState({books, bookToModify: 0})
     }
 
     render() {
@@ -127,22 +138,31 @@ class Books extends Component {
                     <tbody>
                         {
                             this.state.books.map(book => {
-                                return (
-                                    <tr key={book.id}>
-                                        <td>{book.name}</td>
-                                        <td>{book.author}</td>
-                                        <td>{book.year}</td>
-                                        <td>{book.price}</td>
-                                        <td>{book.country}</td>
-                                        <td><button className="btn btn-primary" >Modifier</button></td>
-                                        <td><button onClick={() => this.deleteBookHandler(book.id)} className="btn btn-danger" >Supprimer</button></td>
-                                    </tr>
-                                )
+                                if(book.id !== this.state.bookToModify) {
+                                    return (
+                                        <tr key={book.id}>
+                                            <td>{book.name}</td>
+                                            <td>{book.author}</td>
+                                            <td>{book.year}</td>
+                                            <td>{book.price}</td>
+                                            <td>{book.country}</td>
+                                            <td><button onClick={() => this.editBookHandler(book.id)} className="btn btn-primary" >Modifier</button></td>
+                                            <td><button onClick={() => this.deleteBookHandler(book.id)} className="btn btn-danger" >Supprimer</button></td>
+                                        </tr>
+                                    )
+                                } else {
+                                    return (
+                                        <tr key={book.id}>
+                                            <ModifyBook modifyBook={(book) => this.modifyBookHandler(book)} {...book} />
+                                        </tr>
+                                    )
+                                }
+                                
                             })
                         }
                     </tbody>
                 </table>
-                <AddBook callToAction={(name, author, year, price, country) => this.addBookHandler(name, author, year, price, country)} />
+                <AddBook callToAction={(book) => this.addBookHandler(book)} />
             </>
         );
     }
